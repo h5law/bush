@@ -43,14 +43,38 @@ var (
 	rootCmd = &cobra.Command{
 		Use:   "bush",
 		Short: "Recursively list the contents of a directory",
-		Long: `Walk though the current directory or the directory given as an
-argument and display the contents recursively either in a tree
-like structure or in plain text.
+		Long: `Walk though the current directory or the those given as
+arguments and display the contents recursively either in
+a tree like structure or in plain text.
 
 Use the help subcommand for info about the different flags
 available to alter how this program runs.`,
-		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println(args)
+		RunE: func(cmd *cobra.Command, args []string) error {
+			var dir []string
+			if len(args) > 0 {
+				dir = args
+			} else {
+				dir = []string{"."}
+			}
+
+			// Check if dirs provided are valid path
+			for _, path := range dir {
+				_, err := os.Stat(path)
+
+				// If path is not valid print error and move to next
+				if os.IsNotExist(err) {
+					fmt.Printf("\"%s\" [error opening dir]\n", path)
+					continue
+				}
+				if err != nil {
+					return err
+				}
+
+				// Path is valid
+				fmt.Println(path)
+			}
+
+			return nil
 		},
 	}
 )
@@ -67,6 +91,6 @@ func init() {
 		&levels,
 		"levels",
 		"L",
-		0, "Walk this amount of levels deep (default is 0/ALL)",
+		0, "Levels to walk into directory",
 	)
 }
