@@ -35,6 +35,12 @@ func Walk(root string, dc, fc *int) error {
 			indent = 0
 		}
 
+		// Get levels
+		levels := viper.GetUint("levels")
+		if uint(indent) > levels {
+			return filepath.SkipDir
+		}
+
 		/* Print tree chars
 		├ \u251C
 		─ \u2500
