@@ -33,14 +33,15 @@ package cmd
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 
 	"github.com/h5law/bush/walk"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 var (
-	levels uint
+	ignorePattern string
+	levels        uint
 
 	rootCmd = &cobra.Command{
 		Use:   "bush",
@@ -73,9 +74,8 @@ available to alter how this program runs.`,
 				}
 
 				// Path is valid
-				err = filepath.WalkDir(path, walk.Walker)
-				if err != nil {
-					fmt.Printf("\"%s\" [error: %s]", path, err)
+				if err := walk.Walk(path); err != nil {
+					fmt.Println(err)
 				}
 			}
 
@@ -98,4 +98,16 @@ func init() {
 		"L",
 		0, "Levels to walk into directory",
 	)
+
+	rootCmd.Flags().StringVarP(
+		&ignorePattern,
+		"ignore",
+		"I",
+		"", "Pattern to ignore while walking directories",
+	)
+
+	viper.BindPFlag("levels", rootCmd.Flags().Lookup("levels"))
+	viper.BindPFlag("ignore", rootCmd.Flags().Lookup("ignore"))
+	viper.SetDefault("levels", 0)
+	viper.SetDefault("ignore", "")
 }
