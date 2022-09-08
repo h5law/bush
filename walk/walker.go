@@ -37,7 +37,7 @@ func Walk(root string, dc, fc *int) error {
 
 		// Get levels
 		levels := viper.GetUint("levels")
-		if uint(indent) > levels {
+		if uint(indent) > levels && levels > 0 {
 			return filepath.SkipDir
 		}
 
