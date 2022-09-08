@@ -74,9 +74,11 @@ available to alter how this program runs.`,
 				}
 
 				// Path is valid
-				if err := walk.Walk(path); err != nil {
+				var dirCount, fileCount int
+				if err := walk.Walk(path, &dirCount, &fileCount); err != nil {
 					fmt.Println(err)
 				}
+				fmt.Printf("\n%d directories, %d files\n", dirCount, fileCount)
 			}
 
 			return nil
