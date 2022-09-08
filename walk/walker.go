@@ -68,11 +68,14 @@ func Walk(root string, dc, fc *int) error {
 			*fc += 1
 		}
 
+		// Convert filesize
+		size := ConvertBytes(info.Size())
+
 		name := d.Name()
 		if path == root {
 			name = path
 		}
-		fmt.Printf("[ %v] %s\n", info.Size(), name)
+		fmt.Printf("[ %s] %s\n", size, name)
 		return nil
 	})
 
@@ -81,4 +84,22 @@ func Walk(root string, dc, fc *int) error {
 	}
 
 	return nil
+}
+
+func ConvertBytes(bytes int64) string {
+	if bytes >= 1073741824 {
+		f := fmt.Sprintf("%.1f", float64(bytes/1073741824))
+		f = strings.Trim(f, ".0")
+		return fmt.Sprintf("%sGB", f)
+	} else if bytes >= 1048576 {
+		f := fmt.Sprintf("%.1f", float64(bytes/1048576))
+		f = strings.Trim(f, ".0")
+		return fmt.Sprintf("%sMB", f)
+	} else if bytes >= 1024 {
+		f := fmt.Sprintf("%.1f", float64(bytes/1024))
+		f = strings.Trim(f, ".0")
+		return fmt.Sprintf("%sKB", f)
+	} else {
+		return fmt.Sprintf("%d", bytes)
+	}
 }
