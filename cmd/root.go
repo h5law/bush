@@ -33,7 +33,9 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
+	"github.com/h5law/bush/walk"
 	"github.com/spf13/cobra"
 )
 
@@ -71,7 +73,10 @@ available to alter how this program runs.`,
 				}
 
 				// Path is valid
-				fmt.Println(path)
+				err = filepath.WalkDir(path, walk.Walker)
+				if err != nil {
+					fmt.Printf("\"%s\" [error: %s]", path, err)
+				}
 			}
 
 			return nil
