@@ -42,6 +42,7 @@ import (
 var (
 	ignorePattern string
 	levels        uint
+	dirsFirst     bool
 
 	rootCmd = &cobra.Command{
 		Use:   "bush",
@@ -62,7 +63,13 @@ available to alter how this program runs.`,
 
 			// Check if dirs provided are valid path
 			for _, path := range dir {
-				_, err := os.Stat(path)
+				info, err := os.Stat(path)
+
+				// Check if file
+				if info.IsDir() == false {
+					fmt.Printf("[ %s] %s", walk.ConvertBytes(info.Size()), path)
+					return nil
+				}
 
 				// If path is not valid print error and move to next
 				if os.IsNotExist(err) {
@@ -108,8 +115,17 @@ func init() {
 		"", "Pattern to ignore while walking directories",
 	)
 
+	rootCmd.Flags().BoolVarP(
+		&dirsFirst,
+		"dirs-first",
+		"d",
+		false, "Sort output putting directories first",
+	)
+
 	viper.BindPFlag("levels", rootCmd.Flags().Lookup("levels"))
 	viper.BindPFlag("ignore", rootCmd.Flags().Lookup("ignore"))
+	viper.BindPFlag("dirs-first", rootCmd.Flags().Lookup("dirs-first"))
 	viper.SetDefault("levels", 0)
 	viper.SetDefault("ignore", "")
+	viper.SetDefault("dirs-first", false)
 }
