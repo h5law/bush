@@ -118,12 +118,12 @@ func loopDirs(base, root string, depth int, dc, fc *int) error {
 			finalDir = true
 			fmt.Printf("%s%s ", Corner, strings.Repeat(Dash, (depth+1)*4))
 		}
-		if depth > 0 && !lastDir {
+		if depth > 0 && !finalDir {
 			fmt.Printf("%s", strings.Repeat(Line+"     ", depth))
-		} else if depth > 0 && lastDir && finalDir {
+		} else if depth > 0 && !lastDir && !finalDir {
+			fmt.Printf("%s", strings.Repeat(Line+"     ", depth))
+		} else if depth > 0 {
 			fmt.Printf("      %s", strings.Repeat(Line+"     ", depth-1))
-		} else if depth > 0 && lastDir {
-			fmt.Printf("%s", strings.Repeat(Line+"     ", depth))
 		}
 		if depth > 0 && i != len(dirs)-1 {
 			fmt.Printf("%s%s ",
