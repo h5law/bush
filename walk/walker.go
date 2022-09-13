@@ -17,7 +17,7 @@ const LineRight = "\u251C" //├
 const Dash = "\u2500"      //─
 const Corner = "\u2514"    //└
 
-var lastDir bool
+var finalDir bool
 
 type ByDirFirst []fs.DirEntry
 
@@ -65,14 +65,14 @@ func Walk(root string, dc, fc *int) error {
 	fmt.Printf("[ %s] %s\n", ConvertBytes(info.Size()), f.Name())
 	color.Unset()
 
-	if err := loopDirs(root, root, dc, fc); err != nil {
+	if err := loopDirs(root, root, 0, dc, fc); err != nil {
 		fmt.Println(err)
 	}
 
 	return nil
 }
 
-func loopDirs(base, root string, dc, fc *int) error {
+func loopDirs(base, root string, depth int, dc, fc *int) error {
 	// Get slice containing directory contents
 	dirs, err := readDir(root)
 	if err != nil {
@@ -80,7 +80,11 @@ func loopDirs(base, root string, dc, fc *int) error {
 		return errors.New(msg)
 	}
 
+	lastDir := false
 	for i, d := range dirs {
+		if i == len(dirs)-1 {
+			lastDir = true
+		}
 		root = strings.TrimSuffix(root, "/")
 		path := root + "/" + d.Name()
 
@@ -95,18 +99,9 @@ func loopDirs(base, root string, dc, fc *int) error {
 			return errors.New(msg)
 		}
 
-		// Get indent
-		shortPath := strings.TrimPrefix(path, base)
-		indent := 0
-		if base == "." {
-			indent = strings.Count(shortPath, "/")
-		} else {
-			indent = strings.Count(shortPath, "/") + 1
-		}
-
 		// Get levels
 		levels := viper.GetUint("levels")
-		if uint(indent) > levels && levels > 0 {
+		if uint(depth) > levels && levels > 0 {
 			continue
 		}
 
@@ -117,28 +112,25 @@ func loopDirs(base, root string, dc, fc *int) error {
 		─ Dash
 		└ Corner
 		*/
-		if indent == 1 && i != len(dirs)-1 {
-			fmt.Printf("%s%s ", LineRight, strings.Repeat(Dash, indent*4))
+		if depth == 0 && i != len(dirs)-1 {
+			fmt.Printf("%s%s ", LineRight, strings.Repeat(Dash, (depth+1)*4))
+		} else if depth == 0 && i == len(dirs)-1 {
+			finalDir = true
+			fmt.Printf("%s%s ", Corner, strings.Repeat(Dash, (depth+1)*4))
 		}
-		if indent == 1 && i == len(dirs)-1 {
-			lastDir = true
-			fmt.Printf("%s%s ", Corner, strings.Repeat(Dash, indent*4))
+		if depth > 0 && !lastDir {
+			fmt.Printf("%s", strings.Repeat(Line+"     ", depth))
+		} else if depth > 0 && lastDir && finalDir {
+			fmt.Printf("      %s", strings.Repeat(Line+"     ", depth-1))
+		} else if depth > 0 && lastDir {
+			fmt.Printf("%s", strings.Repeat(Line+"     ", depth))
 		}
-		if !lastDir {
-			fmt.Printf("%s", strings.Repeat(Line+"     ", indent-1))
-		}
-		if indent > 2 && lastDir {
-			fmt.Printf("      %s", strings.Repeat(Line+"      ", indent-2))
-		} else if lastDir {
-			fmt.Printf(strings.Repeat("      ", indent-1))
-		}
-		if indent > 1 && i != len(dirs)-1 {
+		if depth > 0 && i != len(dirs)-1 {
 			fmt.Printf("%s%s ",
 				LineRight,
 				strings.Repeat(Dash, 4),
 			)
-		}
-		if indent > 1 && i == len(dirs)-1 {
+		} else if depth > 0 && i == len(dirs)-1 {
 			fmt.Printf("%s%s ",
 				Corner,
 				strings.Repeat(Dash, 4),
@@ -159,7 +151,8 @@ func loopDirs(base, root string, dc, fc *int) error {
 
 		// Loop through next dir
 		if d.IsDir() {
-			if err := loopDirs(base, root+"/"+d.Name(), dc, fc); err != nil {
+			err := loopDirs(base, root+"/"+d.Name(), depth+1, dc, fc)
+			if err != nil {
 				return err
 			}
 		}
